@@ -1,0 +1,57 @@
+# Caddyfile - Reverse Proxy Configuration
+
+{
+    auto_https off
+    admin off
+}
+
+:3000 {
+    # API routes to backend
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Frontend
+    handle {
+        reverse_proxy frontend:5173
+    }
+
+    # Enable logging
+    log {
+        output stdout
+        format console
+    }
+}
+
+# Production configuration (uncomment and modify for production)
+# your-domain.com {
+#     # API routes to backend
+#     handle /api/* {
+#         reverse_proxy backend:8000
+#     }
+#
+#     # Frontend
+#     handle {
+#         reverse_proxy frontend:80
+#     }
+#
+#     # Enable automatic HTTPS
+#     tls {
+#         # Use Let's Encrypt
+#         # Or specify cert and key files
+#     }
+#
+#     # Security headers
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#         X-Content-Type-Options "nosniff"
+#         X-Frame-Options "DENY"
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+#
+#     # Enable logging
+#     log {
+#         output file /var/log/caddy/access.log
+#         format json
+#     }
+# }

@@ -1,0 +1,43 @@
+# Backend Dependencies for when-end App
+
+# FastAPI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic[email]==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+
+# Authentication
+authlib==1.2.1
+itsdangerous==2.1.2
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+passlib[bcrypt]==1.7.4
+
+# Date/Time
+python-dateutil==2.8.2
+pytz==2023.3
+
+# HTTP Client
+httpx==0.25.2
+
+# Storage
+boto3==1.29.7
+botocore==1.32.7
+
+# Image/Video processing (optional for thumbnails)
+Pillow==10.1.0
+# python-magic==0.4.27  # Optional: MIME type validation
+
+# Development/Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+faker==20.1.0
+
+# Utils
+python-dotenv==1.0.0
