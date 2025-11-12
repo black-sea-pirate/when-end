@@ -172,11 +172,12 @@ function HomePage() {
     }
   };
 
-  const handleDeleteEvent = async (id: string) => {
-    if (!confirm("Delete this event?")) return;
+  // Удаление события: confirm только в модалке!
+  const handleDeleteEvent = async (id: string, afterDelete?: () => void) => {
     try {
       await apiClient.deleteEvent(id);
-      loadEvents();
+      await loadEvents();
+      if (afterDelete) afterDelete();
     } catch (error) {
       console.error("Failed to delete event:", error);
     }
@@ -336,7 +337,7 @@ function HomePage() {
           event={selectedEvent}
           serverNow={serverNow}
           onClose={() => setSelectedEvent(null)}
-          onDelete={handleDeleteEvent}
+          onDelete={(id) => handleDeleteEvent(id, () => setSelectedEvent(null))}
         />
       )}
     </div>
@@ -501,7 +502,6 @@ function EventDetailsModal({
   const handleDelete = () => {
     if (confirm("Delete this event?")) {
       onDelete(event.id);
-      onClose();
     }
   };
 
