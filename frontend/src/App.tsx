@@ -34,7 +34,7 @@ const getColorClasses = (colorBucket: string | null) => {
   }
 };
 
-// Event Card Component
+// Event Card Component (List View)
 function EventCard({
   event,
   serverNow,
@@ -50,27 +50,29 @@ function EventCard({
   return (
     <div
       onClick={onClick}
-      className={`p-4 rounded-lg border-2 cursor-pointer hover:shadow-lg transition ${colorClasses}`}
+      className={`p-4 rounded-lg border-2 cursor-pointer hover:shadow-lg transition ${colorClasses} flex items-center justify-between gap-4`}
     >
-      <h3 className="font-bold text-lg mb-2">{event.title}</h3>
-      {event.description && (
-        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-          {event.description}
-        </p>
-      )}
-      <div className="flex items-center justify-between">
+      <div className="flex-1 min-w-0">
+        <h3 className="font-bold text-lg mb-1 truncate">{event.title}</h3>
+        {event.description && (
+          <p className="text-sm text-muted-foreground line-clamp-1">
+            {event.description}
+          </p>
+        )}
+        {event.repeat_interval !== "none" && (
+          <div className="mt-1 text-xs text-muted-foreground">
+            🔄 Repeats {event.repeat_interval}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-4 flex-shrink-0">
         <span className="text-2xl font-mono font-bold">
           {countdown.formatted}
         </span>
-        <span className="text-xs px-2 py-1 bg-black/10 dark:bg-white/10 rounded">
+        <span className="text-xs px-2 py-1 bg-black/10 dark:bg-white/10 rounded whitespace-nowrap">
           {event.color_bucket || "OVERDUE"}
         </span>
       </div>
-      {event.repeat_interval !== "none" && (
-        <div className="mt-2 text-xs text-muted-foreground">
-          🔄 Repeats {event.repeat_interval}
-        </div>
-      )}
     </div>
   );
 }
@@ -102,6 +104,7 @@ function HomePage() {
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -145,10 +148,22 @@ function HomePage() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const handleCreateEvent = async (data: CreateEventData) => {
+  const handleCreateEvent = async (data: CreateEventData, files?: File[]) => {
     try {
       console.log("Creating event with data:", data);
-      await apiClient.createEvent(data);
+      const newEvent = await apiClient.createEvent(data);
+
+      // Upload attachments if any
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            await apiClient.uploadAttachment(newEvent.id, file);
+          } catch (error) {
+            console.error("Failed to upload file:", file.name, error);
+          }
+        }
+      }
+
       setShowCreateModal(false);
       loadEvents();
     } catch (error) {
@@ -271,23 +286,29 @@ function HomePage() {
                 No events yet. Create your first countdown!
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="max-w-4xl mx-auto space-y-3">
                 {events.map((event) => (
                   <div key={event.id} className="relative group">
                     <EventCard
                       event={event}
                       serverNow={serverNow}
-                      onClick={() => {}}
+                      onClick={() => setSelectedEvent(event)}
                     />
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition flex gap-2">
                       <button
-                        onClick={() => handleShare(event.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShare(event.id);
+                        }}
                         className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
                       >
                         Share
                       </button>
                       <button
-                        onClick={() => handleDeleteEvent(event.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteEvent(event.id);
+                        }}
                         className="px-2 py-1 bg-red-500 text-white rounded text-xs"
                       >
                         Delete
@@ -308,6 +329,16 @@ function HomePage() {
           onCreate={handleCreateEvent}
         />
       )}
+
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <EventDetailsModal
+          event={selectedEvent}
+          serverNow={serverNow}
+          onClose={() => setSelectedEvent(null)}
+          onDelete={handleDeleteEvent}
+        />
+      )}
     </div>
   );
 }
@@ -318,7 +349,7 @@ function CreateEventModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (data: CreateEventData) => void;
+  onCreate: (data: CreateEventData, files?: File[]) => void;
 }) {
   const [formData, setFormData] = useState({
     title: "",
@@ -326,15 +357,25 @@ function CreateEventModal({
     event_date: "",
     repeat_interval: "none" as "none" | "day" | "week" | "month" | "year",
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(Array.from(e.target.files));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate({
-      title: formData.title,
-      description: formData.description || null,
-      event_date: new Date(formData.event_date).toISOString(),
-      repeat_interval: formData.repeat_interval,
-    });
+    onCreate(
+      {
+        title: formData.title,
+        description: formData.description || null,
+        event_date: new Date(formData.event_date).toISOString(),
+        repeat_interval: formData.repeat_interval,
+      },
+      selectedFiles.length > 0 ? selectedFiles : undefined
+    );
   };
 
   return (
@@ -403,6 +444,23 @@ function CreateEventModal({
                 <option value="year">Yearly</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Attachments (Images/Videos)
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*,video/*"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border rounded-lg bg-background file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:opacity-90"
+              />
+              {selectedFiles.length > 0 && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Selected: {selectedFiles.map((f) => f.name).join(", ")}
+                </div>
+              )}
+            </div>
           </div>
           <div className="mt-6 flex gap-3">
             <button
@@ -420,6 +478,154 @@ function CreateEventModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// Event Details Modal
+function EventDetailsModal({
+  event,
+  serverNow,
+  onClose,
+  onDelete,
+}: {
+  event: Event;
+  serverNow: string;
+  onClose: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const countdown = useCountdown(event.effective_due_at, serverNow);
+  const colorClasses = getColorClasses(event.color_bucket);
+
+  const handleDelete = () => {
+    if (confirm("Delete this event?")) {
+      onDelete(event.id);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-background border rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className={`p-6 border-b-4 ${colorClasses}`}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-2">{event.title}</h2>
+              <div className="text-3xl font-mono font-bold">
+                {countdown.formatted}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-2xl hover:bg-accent rounded px-2"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-4">
+          {/* Description */}
+          {event.description && (
+            <div>
+              <h3 className="font-semibold mb-2">Description</h3>
+              <p className="text-muted-foreground whitespace-pre-wrap">
+                {event.description}
+              </p>
+            </div>
+          )}
+
+          {/* Event Details */}
+          <div>
+            <h3 className="font-semibold mb-2">Details</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Date:</span>
+                <span>{new Date(event.event_date).toLocaleString()}</span>
+              </div>
+              {event.repeat_interval !== "none" && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Repeats:</span>
+                  <span>{event.repeat_interval}</span>
+                </div>
+              )}
+              {event.next_occurrence && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Next:</span>
+                  <span>
+                    {new Date(event.next_occurrence).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status:</span>
+                <span
+                  className={
+                    event.is_overdue ? "text-red-500" : "text-green-500"
+                  }
+                >
+                  {event.is_overdue ? "Overdue" : "Active"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Attachments */}
+          {event.attachments && event.attachments.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Attachments</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {event.attachments.map((attachment) => (
+                  <a
+                    key={attachment.id}
+                    href={attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border rounded-lg overflow-hidden hover:shadow-lg transition"
+                  >
+                    {attachment.mime.startsWith("image/") ? (
+                      <img
+                        src={attachment.thumb_url || attachment.url}
+                        alt={attachment.name}
+                        className="w-full h-32 object-cover"
+                      />
+                    ) : attachment.mime.startsWith("video/") ? (
+                      <div className="relative w-full h-32 bg-black flex items-center justify-center">
+                        <span className="text-white text-4xl">▶️</span>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center">
+                        <div className="text-2xl mb-2">📎</div>
+                        <div className="text-xs truncate">
+                          {attachment.name}
+                        </div>
+                      </div>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="p-6 border-t flex gap-3">
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          >
+            Delete Event
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border rounded-lg hover:bg-accent"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
