@@ -147,13 +147,13 @@ function HomePage() {
 
   const handleCreateEvent = async (data: CreateEventData) => {
     try {
+      console.log("Creating event with data:", data);
       await apiClient.createEvent(data);
       setShowCreateModal(false);
       loadEvents();
     } catch (error) {
       console.error("Failed to create event:", error);
-      const message = (error as Error)?.message || "Failed to create event";
-      alert(message);
+      alert("Failed to create event");
     }
   };
 
@@ -182,7 +182,7 @@ function HomePage() {
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">⏱️ when-end</h1>
+          <h1 className="text-2xl font-bold">⏱️ Countdowns</h1>
           <div className="flex items-center gap-4">
             <input
               type="text"
@@ -243,7 +243,7 @@ function HomePage() {
         {!user ? (
           <div className="text-center py-12">
             <p className="text-xl mb-4">
-              Sign in to create and manage your events
+              Sign in to create and manage your countdowns
             </p>
             <button
               onClick={handleLogin}
@@ -333,7 +333,7 @@ function CreateEventModal({
       title: formData.title,
       description: formData.description || null,
       event_date: new Date(formData.event_date).toISOString(),
-      repeat_interval: formData.repeat_interval.toUpperCase() as any,
+      repeat_interval: formData.repeat_interval,
     });
   };
 
@@ -451,7 +451,7 @@ function FinishedPage() {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <Link to="/" className="text-2xl font-bold">
-            ⏱️ when-end
+            ⏱️ Countdowns
           </Link>
         </div>
       </header>
