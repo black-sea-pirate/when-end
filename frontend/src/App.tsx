@@ -50,12 +50,12 @@ function EventCard({
   return (
     <div
       onClick={onClick}
-      className={`p-4 rounded-lg border-2 cursor-pointer hover:shadow-lg transition ${colorClasses} flex items-center justify-between gap-4`}
+      className={`p-3 md:p-4 rounded-lg border-2 cursor-pointer hover:shadow-lg transition ${colorClasses} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4`}
     >
-      <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-lg mb-1 truncate">{event.title}</h3>
+      <div className="flex-1 min-w-0 w-full sm:w-auto">
+        <h3 className="font-bold text-base md:text-lg mb-1 truncate">{event.title}</h3>
         {event.description && (
-          <p className="text-sm text-muted-foreground line-clamp-1">
+          <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
             {event.description}
           </p>
         )}
@@ -65,8 +65,8 @@ function EventCard({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-4 flex-shrink-0">
-        <span className="text-2xl font-mono font-bold">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+        <span className="text-xl md:text-2xl font-mono font-bold">
           {countdown.formatted}
         </span>
         <span className="text-xs px-2 py-1 bg-black/10 dark:bg-white/10 rounded whitespace-nowrap">
@@ -197,29 +197,33 @@ function HomePage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">⏱️ when-end</h1>
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="when-end" className="h-8 w-8" />
+            <h1 className="text-xl md:text-2xl font-bold">when-end</h1>
+          </div>
+          <div className="flex items-center gap-2 md:gap-4">
             <input
               type="text"
-              placeholder="Search events..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadEvents()}
-              className="px-3 py-2 border rounded-lg bg-background"
+              className="hidden sm:block px-3 py-2 border rounded-lg bg-background w-32 md:w-auto"
             />
             <button
               onClick={toggleTheme}
-              className="px-3 py-2 border rounded-lg hover:bg-accent"
+              className="p-2 border rounded-lg hover:bg-accent"
+              aria-label="Toggle theme"
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm">{user.name}</span>
+                <span className="hidden md:inline text-sm">{user.name}</span>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-2 border rounded-lg hover:bg-accent text-sm"
+                  className="px-2 md:px-3 py-2 border rounded-lg hover:bg-accent text-xs md:text-sm"
                 >
                   Logout
                 </button>
@@ -227,9 +231,9 @@ function HomePage() {
             ) : (
               <button
                 onClick={handleLogin}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
+                className="px-2 md:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 text-xs md:text-sm whitespace-nowrap"
               >
-                Sign in with Google
+                Sign in
               </button>
             )}
           </div>
@@ -295,24 +299,26 @@ function HomePage() {
                       serverNow={serverNow}
                       onClick={() => setSelectedEvent(event)}
                     />
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition flex gap-2">
+                    <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition flex gap-1 md:gap-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleShare(event.id);
                         }}
-                        className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
+                        className="px-2 py-1 bg-blue-500 text-white rounded text-xs shadow-lg"
+                        aria-label="Share event"
                       >
-                        Share
+                        📤
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteEvent(event.id);
                         }}
-                        className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                        className="px-2 py-1 bg-red-500 text-white rounded text-xs shadow-lg"
+                        aria-label="Delete event"
                       >
-                        Delete
+                        🗑️
                       </button>
                     </div>
                   </div>
@@ -380,9 +386,9 @@ function CreateEventModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-background border rounded-lg p-6 max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">Create New Event</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-background border rounded-lg p-4 md:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <h2 className="text-lg md:text-xl font-bold mb-4">Create New Event</h2>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
@@ -506,20 +512,21 @@ function EventDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background border rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 md:p-4">
+      <div className="bg-background border rounded-lg max-w-2xl w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className={`p-6 border-b-4 ${colorClasses}`}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2">{event.title}</h2>
-              <div className="text-3xl font-mono font-bold">
+        <div className={`p-4 md:p-6 border-b-4 ${colorClasses}`}>
+          <div className="flex items-start justify-between gap-2 md:gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl md:text-2xl font-bold mb-2 break-words">{event.title}</h2>
+              <div className="text-2xl md:text-3xl font-mono font-bold">
                 {countdown.formatted}
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-2xl hover:bg-accent rounded px-2"
+              className="text-2xl hover:bg-accent rounded px-2 flex-shrink-0"
+              aria-label="Close"
             >
               ×
             </button>
@@ -527,7 +534,7 @@ function EventDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 md:p-6 space-y-4">
           {/* Description */}
           {event.description && (
             <div>
@@ -612,16 +619,16 @@ function EventDetailsModal({
         </div>
 
         {/* Actions */}
-        <div className="p-6 border-t flex gap-3">
+        <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row gap-2 md:gap-3">
           <button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm md:text-base"
           >
             Delete Event
           </button>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border rounded-lg hover:bg-accent"
+            className="flex-1 px-4 py-2 border rounded-lg hover:bg-accent text-sm md:text-base"
           >
             Close
           </button>
