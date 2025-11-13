@@ -198,7 +198,7 @@ function HomePage() {
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">⏱️ Countdowns</h1>
+          <h1 className="text-2xl font-bold">⏱️ when-end</h1>
           <div className="flex items-center gap-4">
             <input
               type="text"
@@ -259,7 +259,7 @@ function HomePage() {
         {!user ? (
           <div className="text-center py-12">
             <p className="text-xl mb-4">
-              Sign in to create and manage your countdowns
+              Sign in to create and manage your events
             </p>
             <button
               onClick={handleLogin}
@@ -657,7 +657,7 @@ function FinishedPage() {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <Link to="/" className="text-2xl font-bold">
-            ⏱️ Countdowns
+            ⏱️ when-end
           </Link>
         </div>
       </header>

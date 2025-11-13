@@ -19,10 +19,14 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Add session middleware for OAuth
+# Add session middleware for OAuth with secure cookies in production
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.SESSION_SECRET_KEY
+    secret_key=settings.SESSION_SECRET_KEY,
+    session_cookie="session",
+    max_age=3600,  # 1 hour for OAuth state
+    same_site="lax",
+    https_only=settings.ENVIRONMENT == "production"  # Secure cookies in production
 )
 
 # Configure CORS

@@ -3,6 +3,11 @@
 .env.local
 .env.*.local
 
+# Cloudflare Tunnel
+cloudflared.exe
+cloudflared-config.yml
+*.pem
+
 # Python
 __pycache__/
 *.py[cod]
